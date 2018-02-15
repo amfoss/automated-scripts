@@ -10,12 +10,12 @@ from apiclient import errors
 
 email_list = []
 
-try:
-    import argparse
-
-    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-except ImportError:
-    flags = None
+# try:
+#     import argparse
+#
+#     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+# except ImportError:
+#     flags = None
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/gmail-python-quickstart.json
@@ -156,19 +156,15 @@ def ListMessagesMatchingQuery(service, user_id, query=''):
         print ('An error occurred: %s' % error)
 
 
-def main():
+def main(date):
     # This is the function which asks the user for his query
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('gmail', 'v1', http=http)
-    a = raw_input("enter the date : ")
-    a = '[foss-2017] Status Update [' + a + ']'
+    query = '[foss-2017] Status Update [' + date + ']'
     message = []
-    messgs = ListMessagesMatchingQuery(service, user_id='me', query=a)
+    messgs = ListMessagesMatchingQuery(service, user_id='me', query=query)
     for item in messgs:
         message = GetMsg(service, user_id="me", msg_id=item['id'])
     return message
 
-
-if __name__ == '__main__':
-    main()

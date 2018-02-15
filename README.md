@@ -10,7 +10,9 @@ First clone this repository and then follow the given steps below :-
 ### Prerequisites
 You need to have a google account to do this and the rest are specified under  getting started itself
 ## Running the script
-You can directly use python <filename> and if are using python3 make sure that you edit print functions enclosing with ()  in files test.py and email_checker.py
+```python
+python email_checker.py '14/02/2018'
+``` 
 
 ## Built with
 Python

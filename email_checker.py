@@ -1,5 +1,9 @@
+import sys
 import test
 import csv
+
+
+date = sys.argv[1]
 
 cs = open('data/1.csv', 'r')
 y1 = []
@@ -7,13 +11,15 @@ y2 = []
 y3 = []
 y4 = []
 y = []
+
 y1.append(10 * "-" + 'FIRST YEARS' + 10 * "-")
 y2.append(10 * "-" + 'SECOND YEARS' + 10 * "-")
 y3.append(10 * "-" + 'THIRD YEARS' + 10 * "-")
 y4.append(10 * "-" + "FOURTH YEARS" + 10 * "-")
-message = test.main()
 
-print ("Number of status mails %d" %len(message))
+message = test.main(date)
+
+print ("Number of status mails %d" % len(message))
 
 with cs:
     wcs = csv.reader(cs)
