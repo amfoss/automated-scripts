@@ -1,0 +1,5 @@
+*.csv
+*.txt
+*.pyc
+.idea/
+data/
