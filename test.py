@@ -72,7 +72,7 @@ def GetMsg(service, user_id, msg_id):
 
         return "mime_msg"
     except errors.HttpError, error:
-        print 'An error occurred: %s' % error
+        print ('An error occurred: %s' % error)
 
 
 def get_label_id(service, user_id, label_name):
@@ -120,8 +120,7 @@ def ListMessagesWithLabels(service, user_id, label_ids=[]):
 
         return messages
     except errors.HttpError, error:
-        print
-        'An error occurred: %s' % error
+        print ('An error occurred: %s' % error)
 
 
 def ListMessagesMatchingQuery(service, user_id, query=''):
@@ -154,7 +153,7 @@ def ListMessagesMatchingQuery(service, user_id, query=''):
 
         return messages
     except errors.HttpError, error:
-        print 'An error occurred: %s' % error
+        print ('An error occurred: %s' % error)
 
 
 def main():
