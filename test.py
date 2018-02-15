@@ -7,7 +7,8 @@ from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 from apiclient import errors
-email_list=[]
+
+email_list = []
 
 try:
     import argparse
@@ -32,7 +33,7 @@ def get_credentials():
     Returns:
         Credentials, the obtained credential.
     """
-    #This function generates the required credentials required to make api calls
+    # This function generates the required credentials required to make api calls
     home_dir = os.path.expanduser('~')
     credential_dir = os.path.join(home_dir, '.credentials')
     if not os.path.exists(credential_dir):
@@ -51,25 +52,28 @@ def get_credentials():
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
+
+
 def GetMsg(service, user_id, msg_id):
-#This user defined message prints the email id's  and their total number emails,of the senders who has sent status updates except user's 
-  try:
-    message = service.users().messages().get(userId=user_id, id=msg_id,
-                                             format='metadata').execute()
+    # This user defined message prints the email id's  and their total number emails,of the senders who has sent status updates except user's
+    try:
+        message = service.users().messages().get(userId=user_id, id=msg_id,
+                                                 format='metadata').execute()
 
-    payload = message["payload"]["headers"]
-    
-    a = "X-Original-Sender"
-    #The below part prints the email id's
-    for d in payload:
-      if a in d["name"]:
-        email_list.append(d["value"])
-    return(email_list)        
-    # mime_msg = email.message_from_string(msg_str)
+        payload = message["payload"]["headers"]
 
-    return "mime_msg"
-  except errors.HttpError, error:
-    print 'An error occurred: %s' % error
+        a = "X-Original-Sender"
+        # The below part prints the email id's
+        for d in payload:
+            if a in d["name"]:
+                email_list.append(d["value"])
+        return (email_list)
+        # mime_msg = email.message_from_string(msg_str)
+
+        return "mime_msg"
+    except errors.HttpError, error:
+        print 'An error occurred: %s' % error
+
 
 def get_label_id(service, user_id, label_name):
     foss_label_id = ""
@@ -118,81 +122,54 @@ def ListMessagesWithLabels(service, user_id, label_ids=[]):
     except errors.HttpError, error:
         print
         'An error occurred: %s' % error
+
+
 def ListMessagesMatchingQuery(service, user_id, query=''):
-  """List all Messages of the user's mailbox matching the query.
+    """List all Messages of the user's mailbox matching the query.
 
-  Args:
-    service: Authorized Gmail API service instance.
-    user_id: User's email address. The special value "me"
-    can be used to indicate the authenticated user.
-    query: String used to filter messages returned.
-    Eg.- 'from:user@some_domain.com' for Messages from a particular sender.
+    Args:
+      service: Authorized Gmail API service instance.
+      user_id: User's email address. The special value "me"
+      can be used to indicate the authenticated user.
+      query: String used to filter messages returned.
+      Eg.- 'from:user@some_domain.com' for Messages from a particular sender.
 
-  Returns:
-    List of Messages that match the criteria of the query. Note that the
-    returned list contains Message IDs, you must use get with the
-    appropriate ID to get the details of a Message.
-  """
-  try:
-    response = service.users().messages().list(userId=user_id,
-                                               q=query).execute()
-    messages = []
-    if 'messages' in response:
-      messages.extend(response['messages'])
+    Returns:
+      List of Messages that match the criteria of the query. Note that the
+      returned list contains Message IDs, you must use get with the
+      appropriate ID to get the details of a Message.
+    """
+    try:
+        response = service.users().messages().list(userId=user_id,
+                                                   q=query).execute()
+        messages = []
+        if 'messages' in response:
+            messages.extend(response['messages'])
 
-    while 'nextPageToken' in response:
-      page_token = response['nextPageToken']
-      response = service.users().messages().list(userId=user_id, q=query,
-                                         pageToken=page_token).execute()
-      messages.extend(response['messages'])
+        while 'nextPageToken' in response:
+            page_token = response['nextPageToken']
+            response = service.users().messages().list(userId=user_id, q=query,
+                                                       pageToken=page_token).execute()
+            messages.extend(response['messages'])
 
-    return messages
-  except errors.HttpError, error:
-    print 'An error occurred: %s' % error        
-def ListMessagesMatchingQuery(service, user_id, query=''):
-  """List all Messages of the user's mailbox matching the query.
+        return messages
+    except errors.HttpError, error:
+        print 'An error occurred: %s' % error
 
-  Args:
-    service: Authorized Gmail API service instance.
-    user_id: User's email address. The special value "me"
-    can be used to indicate the authenticated user.
-    query: String used to filter messages returned.
-    Eg.- 'from:user@some_domain.com' for Messages from a particular sender.
 
-  Returns:
-    List of Messages that match the criteria of the query. Note that the
-    returned list contains Message IDs, you must use get with the
-    appropriate ID to get the details of a Message.
-  """
-  try:
-    response = service.users().messages().list(userId=user_id,
-                                               q=query).execute()
-    messages = []
-    if 'messages' in response:
-      messages.extend(response['messages'])
-
-    while 'nextPageToken' in response:
-      page_token = response['nextPageToken']
-      response = service.users().messages().list(userId=user_id, q=query,
-                                         pageToken=page_token).execute()
-      messages.extend(response['messages'])
-
-    return messages
-  except errors.HttpError, error:
-    print 'An error occurred: %s' % error        
-def main():  
-    #This is the function which asks the user for his query
+def main():
+    # This is the function which asks the user for his query
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('gmail', 'v1', http=http)
-    a=raw_input("enter the date : ")
-    a='[foss-2017] Status Update ['+a+']'
-    message=[]    
-    messgs=ListMessagesMatchingQuery(service, user_id='me', query= a)
+    a = raw_input("enter the date : ")
+    a = '[foss-2017] Status Update [' + a + ']'
+    message = []
+    messgs = ListMessagesMatchingQuery(service, user_id='me', query=a)
     for item in messgs:
-        message = GetMsg(service,user_id = "me",msg_id = item['id'])
+        message = GetMsg(service, user_id="me", msg_id=item['id'])
     return message
+
 
 if __name__ == '__main__':
     main()
-
