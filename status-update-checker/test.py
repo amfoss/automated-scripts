@@ -1,21 +1,17 @@
-import httplib2
 import os
-import base64
-import email
+import httplib2
 from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 from apiclient import errors
 
-email_list = []
+try:
+    import argparse
 
-# try:
-#     import argparse
-#
-#     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-# except ImportError:
-#     flags = None
+    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+except ImportError:
+    flags = None
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/gmail-python-quickstart.json
@@ -33,7 +29,6 @@ def get_credentials():
     Returns:
         Credentials, the obtained credential.
     """
-    # This function generates the required credentials required to make api calls
     home_dir = os.path.expanduser('~')
     credential_dir = os.path.join(home_dir, '.credentials')
     if not os.path.exists(credential_dir):
@@ -54,76 +49,28 @@ def get_credentials():
     return credentials
 
 
-def GetMsg(service, user_id, msg_id):
-    # This user defined message prints the email id's  and their total number emails,of the senders who has sent status updates except user's
-    try:
-        message = service.users().messages().get(userId=user_id, id=msg_id,
-                                                 format='metadata').execute()
-
-        payload = message["payload"]["headers"]
-
-        a = "X-Original-Sender"
-        # The below part prints the email id's
-        for d in payload:
-            if a in d["name"]:
-                email_list.append(d["value"])
-        return (email_list)
-        # mime_msg = email.message_from_string(msg_str)
-
-        return "mime_msg"
-    except errors.HttpError, error:
-        print ('An error occurred: %s' % error)
-
-
 def get_label_id(service, user_id, label_name):
-    foss_label_id = ""
+    """
+    Return the label id of a Gmail label
+    :param service: Authorized Gmail API service instance.
+    :param user_id: User's email address. The special value "me"
+    :param label_name: The name of the label id required
+    :return: string(label_id)
+    """
+    label_id = ''
     try:
         response = service.users().labels().list(userId=user_id).execute()
         labels = response['labels']
         for label in labels:
             if label['name'] == label_name:
-                # print('Label id: %s - Label name: %s' % (label['id'], label['name']))
-                foss_label_id = label['id']
-    except errors.HttpError, error:
-        print('An error occurred: %s' % error)
+                label_id = label['id']
+    except errors.HttpError:
+        print('An error occurred')
 
-    return foss_label_id
-
-
-def ListMessagesWithLabels(service, user_id, label_ids=[]):
-    """List all Messages of the user's mailbox with label_ids applied.
-
-    Args:
-      service: Authorized Gmail API service instance.
-      user_id: User's email address. The special value "me"
-      can be used to indicate the authenticated user.
-      label_ids: Only return Messages with these labelIds applied.
-
-    Returns:
-      List of Messages that have all required Labels applied. Note that the
-      returned list contains Message IDs, you must use get with the
-      appropriate id to get the details of a Message.
-    """
-    try:
-        response = service.users().messages().list(userId=user_id,
-                                                   labelIds=label_ids).execute()
-        messages = []
-        if 'messages' in response:
-            messages.extend(response['messages'])
-
-        while 'nextPageToken' in response:
-            page_token = response['nextPageToken']
-            response = service.users().messages().list(userId=user_id,
-                                                       labelIds=label_ids,
-                                                       pageToken=page_token).execute()
-            messages.extend(response['messages'])
-
-        return messages
-    except errors.HttpError, error:
-        print ('An error occurred: %s' % error)
+    return label_id
 
 
-def ListMessagesMatchingQuery(service, user_id, query=''):
+def list_messages_matching_query(service, user_id, query=''):
     """List all Messages of the user's mailbox matching the query.
 
     Args:
@@ -147,24 +94,66 @@ def ListMessagesMatchingQuery(service, user_id, query=''):
 
         while 'nextPageToken' in response:
             page_token = response['nextPageToken']
-            response = service.users().messages().list(userId=user_id, q=query,
-                                                       pageToken=page_token).execute()
+            response = service.users().messages().list(
+                userId=user_id, q=query, pageToken=page_token).execute()
             messages.extend(response['messages'])
-
         return messages
-    except errors.HttpError, error:
-        print ('An error occurred: %s' % error)
+
+    except errors.HttpError:
+        print('An error occurred')
 
 
-def main(date):
-    # This is the function which asks the user for his query
+def get_sender_email_id(service, user_id, msg_id):
+    """
+    This functions return the email id of the sender
+    :param service: The google service(here Gmail)
+    :param user_id: The user id of the user
+    :param msg_id: The message id that is to be retrived
+    :return: string(email id)
+    """
+    email_id = ''
+
+    try:
+        message = service.users().messages().get(userId=user_id, id=msg_id,
+                                                 format='metadata').execute()
+
+        header_data = message["payload"]["headers"]
+
+        sender_text = "X-Original-Sender"
+
+        # Get email id from header data
+        for data in header_data:
+            if sender_text in data["name"]:
+                email_id = data["value"]
+        return email_id
+
+    except errors.HttpError:
+        print('An error occurred')
+
+
+def get_status_update_emails(status_update_date):
+    """
+
+    :param status_update_date: Date of the status update you want to query
+    :return:
+    """
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('gmail', 'v1', http=http)
-    query = '[foss-2017] Status Update [' + date + ']'
-    message = []
-    messgs = ListMessagesMatchingQuery(service, user_id='me', query=query)
-    for item in messgs:
-        message = GetMsg(service, user_id="me", msg_id=item['id'])
-    return message
+    status_update_date_string = status_update_date.strftime('%d-%m-%Y')
+    query = '[foss-2017] Status Update [%s]' % status_update_date_string
 
+    emails = []
+    messages = list_messages_matching_query(service, user_id='me', query=query)
+
+    for message in messages:
+        email = get_sender_email_id(
+            service, user_id="me", msg_id=message['id'])
+        emails.append(email)
+
+    return emails
+
+
+if __name__ == '__main__':
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
