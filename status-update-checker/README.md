@@ -1,3 +1,5 @@
+### This project is now obsolete and is marked as `archived`, and has been replaced by the Status Update Engine in [amFOSS CMS](https://github.com/amfoss/cms). 
+
 # status-tracker
 This is a small script that provides user to access the mail id's of the people who sent messages matching the required query.
 ## Getting Started
